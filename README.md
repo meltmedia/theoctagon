@@ -20,9 +20,13 @@
 
 ##Test
 
-[How do people run the tests?]
+### Unit
+From root run:
+```mvn test```
 
-[How do people run automated tests?]
+### Integration
+From root run:
+```mvn integration-test```
 
 ##Deploy
 
