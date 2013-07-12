@@ -19,7 +19,6 @@ import java.util.List;
  * User: jheun
  * Date: 6/26/13
  */
-@JsonInclude
 public class UserRepresentation extends User implements Representation {
 
   private List<Link> links = new ArrayList<Link>();
