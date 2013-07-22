@@ -2,27 +2,31 @@
 
 ##Documentation
 
-[Where is the core documention for your project found?]
+It's a secret. Shhh.
 
 ##Setup
 
-[What do people need to have installed on their machines to run this project?]
+[Maven](http://maven.apache.org)
 
 ##Build
 
-[What do people need to do to build this project?]
+```mvn clean install``` will build and install the project locally.
 
 ##Run
 
-[What do people need to do to run this project?]
+```mvn jetty:run``` will start the server locally.
 
-[How do people verify that the system is running?]
+To validate the server is running, navigate to http://locahost:8080 or ```curl localhost:8080```.
 
 ##Test
 
-[How do people run the tests?]
+### Unit
+From root run:
+```mvn test```
 
-[How do people run automated tests?]
+### Integration
+From root run:
+```mvn integration-test```
 
 ##Deploy
 
