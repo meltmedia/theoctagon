@@ -1,7 +1,9 @@
 package com.meltmedia.dao;
 
+import com.google.common.base.Optional;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
+import com.meltmedia.data.PaginationList;
 import com.meltmedia.data.User;
 
 import javax.persistence.Query;
@@ -49,7 +51,14 @@ public class UserDAO extends AbstractDAO<User> {
   public List<User> list() {
     return super.list();
   }
-  
+
+  @Override
+  @Transactional
+  public PaginationList<User> list(int page, Optional<Integer> optionalLimit) {
+    return super.list(page, optionalLimit);
+  }
+
+  @SuppressWarnings("unchecked")
   public User getByEmail(String email) {
     Query query = provider.get().createQuery("select usr from User usr where lower(usr.email) = :email");
     query.setParameter("email", email.toLowerCase());

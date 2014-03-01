@@ -1,5 +1,9 @@
 package com.meltmedia.resource;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+import com.meltmedia.data.PaginationList;
 import com.meltmedia.dao.UserDAO;
 import com.meltmedia.data.User;
 import com.google.inject.Inject;
@@ -13,12 +17,10 @@ import com.praxissoftware.rest.core.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.util.ArrayList;
+import javax.ws.rs.core.*;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -31,34 +33,42 @@ import java.util.List;
 @Singleton
 public class UserResource {
 
+  private final CreateUserRepresentationFunction createUserRepresentationFunction = new CreateUserRepresentationFunction();
+  private final Logger log = LoggerFactory.getLogger( getClass() );
+
   @Context UriInfo uriInfo;
-
-  private Logger log = LoggerFactory.getLogger( getClass() );
-
-  protected UserRepresentation createRepresentation(User user) {
-
-    UserRepresentation rep = new UserRepresentation(user);
-    // Link to the full entity
-    rep.getLinks().add( new Link( uriInfo.getBaseUriBuilder().path( UserResource.class ).path( user.getId().toString()).build(), "self", MediaType.APPLICATION_JSON ) );
-    return rep;
-
-  }
+  @Context HttpServletResponse response;
 
   @Inject ValidationService validationService;
   @Inject UserDAO dao;
 
   @GET
   @Produces("application/json")
-  public List<UserRepresentation> getUsers() {
-    List<User> users = dao.list();
+  public List<UserRepresentation> getUsers(@QueryParam("page") int page, @QueryParam("limit") int limit) {
+    try {
+      PaginationList<User> users = dao.list(page, Optional.of(limit));
 
-    List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
+      addPaginationHeaders(response, users);
 
-    for (User user : users) {
-      userReps.add( createRepresentation( user ) );
+      List<UserRepresentation> userReps = Lists.transform(users, createUserRepresentationFunction);
+      return userReps;
+    } catch (IllegalArgumentException e) { //TODO provide more meaningful message to client
+      throw new JsonMessageException(Response.Status.BAD_REQUEST, e.getLocalizedMessage());
     }
+  }
 
-    return userReps;
+  private void addPaginationHeaders(HttpServletResponse response, PaginationList<User> users) {
+    response.addHeader("Pagination-Limit", String.valueOf(users.getLimit()));
+    response.addHeader("Pagination-Page", String.valueOf(users.getPage()));
+    response.addHeader("Pagination-Last-Page", String.valueOf(users.getLastPage()));
+
+    URI nextPageUri = createExperimentalNextPageUri(users);
+    response.addHeader("Experimental-Pagination-Page-Next", nextPageUri.toASCIIString());
+  }
+
+  private URI createExperimentalNextPageUri(PaginationList<User> users) {
+    int nextPageNumber = users.getNextPageNumber();
+    return uriInfo.getBaseUriBuilder().path(UserResource.class).replaceQueryParam("limit", users.getLimit()).replaceQueryParam("page", nextPageNumber).build();
   }
 
   @GET
@@ -103,8 +113,25 @@ public class UserResource {
     dao.create( user );
 
     // Return a representation of the user
-    return createRepresentation( user );
+    return createUserRepresentationFunction.apply( user );
 
   }
 
+  private UserRepresentation createRepresentation(User user) {
+    UserRepresentation rep = new UserRepresentation(user);
+    addFullEntityLink(rep, user);
+    return rep;
+  }
+
+  private void addFullEntityLink(UserRepresentation rep, User user) {
+    Link fullEntityLink = new Link(uriInfo.getBaseUriBuilder().path(UserResource.class).path(user.getId().toString()).build(), "self", MediaType.APPLICATION_JSON);
+    rep.getLinks().add(fullEntityLink);
+  }
+
+  private class CreateUserRepresentationFunction implements Function<User, UserRepresentation> {
+    @Override
+    public UserRepresentation apply(User user) {
+      return createRepresentation(user);
+    }
+  }
 }

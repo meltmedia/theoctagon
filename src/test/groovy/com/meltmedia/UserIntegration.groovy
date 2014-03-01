@@ -1,6 +1,7 @@
 package com.meltmedia
 
 import groovyx.net.http.RESTClient
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -16,7 +17,7 @@ class UserIntegration {
     /**
      * Test that we can create a good user and that we can get that user after it has been created
      */
-    @Test
+    @Test @Ignore //TODO refactor this or UserPaginationIntegration so they can be executed together
     public void testCreateGoodUser() {
 
         def http = new RESTClient( URL )
@@ -134,7 +135,7 @@ class UserIntegration {
 
     }
 
-    @Test
+    @Test @Ignore //TODO refactor this or UserPaginationIntegration so they can be executed together
     public void testListUser() {
 
         def http = new RESTClient( URL )
