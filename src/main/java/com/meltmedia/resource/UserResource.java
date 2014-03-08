@@ -13,6 +13,7 @@ import com.praxissoftware.rest.core.Link;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -47,19 +48,44 @@ public class UserResource {
   @Inject ValidationService validationService;
   @Inject UserDAO dao;
 
-  @GET
-  @Produces("application/json")
-  public List<UserRepresentation> getUsers() {
-    List<User> users = dao.list();
+    /**
+     * This method lists a range of users as specified by pageSize and pageNumber. If neither are specified
+     * it defaults to pageSize = 10 and pageNumber = 1. This method uses a 1-based index for pages.
+     */
+    @GET
+    @Produces("application/json")
+    public List<UserRepresentation> getUsers(@DefaultValue("10") @QueryParam("pageSize") int pageSize,
+                                           @DefaultValue("1") @QueryParam("pageNumber") int pageNumber,
+                                           @Context HttpServletResponse response) {
+        // Get full list of users
+        List<User> users = dao.list();
+        List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
 
-    List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
+        // If the request contains an illegal parameter, throw HTTP 400 exception.
+        // Some might argue that we should allow 0 for pageSize/pageNumber, but
+        // the resulting page for either parameter would always display 0 users
+        // so that seems unproductive.
+        if (pageSize <= 0 || pageNumber <= 0)
+            throw new WebApplicationException( 400 );
 
-    for (User user : users) {
-      userReps.add( createRepresentation( user ) );
+        // Calculate starting and ending index
+        int startingIndex = pageSize * (pageNumber - 1);
+        int endingIndex = startingIndex + pageSize;
+
+        // Make sure we don't go beyond the final user in the data source
+        int maxIndexToDisplay = Math.min(endingIndex, users.size()) - 1;
+
+        // Add all users to list within our calculated range
+        for (int i = startingIndex; i <= maxIndexToDisplay; i++) {
+            userReps.add( createRepresentation( users.get(i) ) );
+        }
+
+        // Add an HTTP Header to describe what page number we're serving (particularly
+        // useful when no parameters are provided by user)
+        response.setHeader("Content-Range", "Page Number: " + String.valueOf(pageNumber));
+
+        return userReps;
     }
-
-    return userReps;
-  }
 
   @GET
   @Path("/{userId}")

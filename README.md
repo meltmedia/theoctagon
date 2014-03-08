@@ -25,6 +25,7 @@ From root run:
 ```mvn test```
 
 ### Integration
+NOTE: Before running the integration tests you must run /dataset-loader/users.sh as the tests expect to have 201 users
 From root run:
 ```mvn integration-test```
 
