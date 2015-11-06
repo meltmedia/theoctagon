@@ -29,25 +29,34 @@ public class BoilerServletConfig extends GuiceServletContextListener {
   private final Logger log = LoggerFactory.getLogger(getClass());
   
   private ServletContext servletContext;
-  
+
   @Override
   public void contextInitialized(ServletContextEvent servletContextEvent) {
     servletContext = servletContextEvent.getServletContext();
     super.contextInitialized(servletContextEvent);
-    
-    // Create a default user
-    User user = new User();    
-    user.setEmail("lonestarr");
-    UserUtil.setupNewPassword(user, "vespa".toCharArray());
-    
-    Injector injector = (Injector)servletContext.getAttribute(Injector.class.getName());
+
+    Injector injector = (Injector) servletContext.getAttribute(Injector.class.getName());
     UnitOfWork unitOfWork = injector.getInstance(UnitOfWork.class);
     unitOfWork.begin();
-    UserDAO userDAO = injector.getInstance(UserDAO.class);    
-    userDAO.create(user);
+    UserDAO userDAO = injector.getInstance(UserDAO.class);
+
+    int x = 200;
+    // create x users
+    // for testing purposes
+    for (int i = 0; i < x; i++) {
+      createUser(userDAO);
+    }
+
     unitOfWork.end();
-    
-    log.info("Created user");        
+
+    log.info("Created users");
+  }
+
+  public void createUser(UserDAO userDAO){
+    User user = new User();
+    user.setEmail("Door");
+    UserUtil.setupNewPassword(user, "Door".toCharArray());
+    userDAO.create(user);
   }
   
   @Override
