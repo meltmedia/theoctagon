@@ -49,16 +49,28 @@ public class UserResource {
 
   @GET
   @Produces("application/json")
-  public List<UserRepresentation> getUsers() {
-    List<User> users = dao.list();
-
-    List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
-
-    for (User user : users) {
-      userReps.add( createRepresentation( user ) );
+  public List<UserRepresentation> getUsers(@DefaultValue("35") @QueryParam("numOfUsersPerPage") int numOfUsersPerPage, @DefaultValue("1") @QueryParam("startingPage") int startingPage) {
+    if (startingPage < 1){
+      return new ArrayList<UserRepresentation>();
     }
 
-    return userReps;
+    // Grab all the users in the dao
+    List<User> users = dao.list();
+    List<UserRepresentation> newUserList = new ArrayList<UserRepresentation>();
+
+    // Find the last page that can be navigated to
+    int finalPage = startingPage + (startingPage * (numOfUsersPerPage - 1));
+
+    // We need to make sure we don't try to grab more users than even exist
+    int maximumPageSize = Math.min(users.size(), finalPage);
+
+    // Go through all users, starting at the specified page (numOfUsersPerPage), and add them to the new List (newUserList)
+    for (int i = (numOfUsersPerPage * (startingPage - 1)); i < maximumPageSize; i++) {
+      newUserList.add(createRepresentation(users.get(i)));
+    }
+
+    // Give away our new list of Users! :)
+    return newUserList;
   }
 
   @GET

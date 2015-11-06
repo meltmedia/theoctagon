@@ -16,7 +16,7 @@ It's a secret. Shhh.
 
 ```mvn jetty:run``` will start the server locally.
 
-To validate the server is running, navigate to http://locahost:8080 or ```curl localhost:8080```.
+To validate the server is running, navigate to http://localhost:8080 or ```curl localhost:8080```.
 
 ##Test
 
