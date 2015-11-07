@@ -1,8 +1,6 @@
 package com.meltmedia
-
 import groovyx.net.http.RESTClient
 import org.junit.Test
-
 /**
  * Created with IntelliJ IDEA.
  * User: jheun
@@ -135,18 +133,57 @@ class UserIntegration {
     }
 
     @Test
-    public void testListUser() {
+    public void testGetDefaultUserList() {
 
         def http = new RESTClient( URL )
 
         // Create a user so we have at least 1
-        http.post(body: [ email:"testUser.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+        //http.post(body: [ email:"testUser.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+
+        // Creates a bunch of users
+        for (int i = 1; i <= 100; i++) {
+            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+        }
 
         def resp = http.get(path: "/api/user", requestContentType: JSON)
 
         assert resp.status == 200
-        assert resp.data.asList.size > 0
-
+        assert resp.data.asList.size == 25
+        assert resp.data.id.first() == 1
     }
 
+    @Test
+    public void testGetSpecifiedUserList() {
+        final int NUMBER_OF_USERS = 50;
+
+        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS )
+
+        // Creates a bunch of users
+        for (int i = 1; i <= 100; i++) {
+            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+        }
+
+        def resp = http.get(path: "/api/user", requestContentType: JSON)
+
+        assert resp.status == 200
+        assert resp.data.asList.size == NUMBER_OF_USERS
+    }
+
+    @Test
+    public void testGetOtherPageUserList() {
+        final int PAGE_NUMBER = 2;
+        final int NUMBER_OF_USERS = 50;
+
+        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS + "&pageNumber=" + PAGE_NUMBER )
+
+        // Creates a bunch of users
+        for (int i = 1; i <= 100; i++) {
+            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+        }
+
+        def resp = http.get(path: "/api/user", requestContentType: JSON)
+
+        assert resp.status == 200
+        assert resp.data.id.first() == NUMBER_OF_USERS + 1;
+    }
 }

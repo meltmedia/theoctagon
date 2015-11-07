@@ -49,13 +49,27 @@ public class UserResource {
 
   @GET
   @Produces("application/json")
-  public List<UserRepresentation> getUsers() {
+  public List<UserRepresentation> getUsers(@DefaultValue("25") @QueryParam("numberOfUsers") int numberOfUsers, @DefaultValue("1") @QueryParam("pageNumber") int pageNumber) {
     List<User> users = dao.list();
 
     List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
 
-    for (User user : users) {
-      userReps.add( createRepresentation( user ) );
+    // Determine the last page to clamp the page number
+    int lastPage = (int) Math.ceil((double) users.size() / (double) numberOfUsers);
+
+    // Clamps the page number to the first and last pages
+    if(pageNumber < 1) {
+      pageNumber = 1;
+    } else if(pageNumber > lastPage) {
+      pageNumber = lastPage;
+    }
+
+    // The first and last indices of the user list for the selected range of users
+    int startingUserIndex = (pageNumber - 1) * numberOfUsers;
+    int lastUserIndex = Math.min(users.size(), pageNumber * numberOfUsers);
+
+    for (int i = startingUserIndex; i < lastUserIndex; i++) {
+      userReps.add(createRepresentation(users.get(i)));
     }
 
     return userReps;
