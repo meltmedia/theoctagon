@@ -11,14 +11,19 @@ class UserIntegration {
 
     private static final String JSON = "application/json"
     private static final String URL = "http://localhost:8080/api/user"
+    private static boolean runOnce = false;
 
     @Before
     public void setup() {
         def http = new RESTClient( URL )
 
-        // Creates a bunch of users
-        for (int i = 1; i <= 100; i++) {
-            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+        // Only runs once instead of before each test
+        if(!runOnce) {
+            // Creates a bunch of users
+            for (int i = 1; i <= 100; i++) {
+                http.post(body: [email: "testUser" + i + ".list@meltdev.com", password: "vespa"], requestContentType: JSON)
+            }
+            runOnce = true;
         }
     }
 
@@ -153,21 +158,21 @@ class UserIntegration {
     }
 
     @Test
-    public void testGetBiggerUserList() {
-        final int NUMBER_OF_USERS = 200;
+    public void testGetBiggerPageSize() {
+        final int PAGE_SIZE = 200;
 
-        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS );
+        def http = new RESTClient( URL + "?pageSize=" + PAGE_SIZE );
         def resp = http.get(path: "/api/user", requestContentType: JSON);
 
         assert resp.status == 200;
-        assert resp.data.asList.size <= NUMBER_OF_USERS;
+        assert resp.data.asList.size <= PAGE_SIZE;
     }
 
     @Test
-    public void testGetNegativeUserList() {
-        final int NUMBER_OF_USERS = -1;
+    public void testGetNegativePageSize() {
+        final int PAGE_SIZE = -1;
 
-        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS );
+        def http = new RESTClient( URL + "?pageSize=" + PAGE_SIZE );
         def resp = http.get(path: "/api/user", requestContentType: JSON);
 
         assert resp.status == 200;
@@ -176,21 +181,21 @@ class UserIntegration {
 
     @Test
     public void testRequestValidPage() {
-        final int PAGE_NUMBER = 2;
-        final int NUMBER_OF_USERS = 50;
+        final int PAGE = 2;
+        final int PAGE_SIZE = 50;
 
-        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS + "&pageNumber=" + PAGE_NUMBER );
+        def http = new RESTClient( URL + "?pageSize=" + PAGE_SIZE + "&page=" + PAGE );
         def resp = http.get(path: "/api/user", requestContentType: JSON);
 
         assert resp.status == 200;
-        assert resp.data.asList.size <= 50;
+        assert resp.data.asList.size <= PAGE_SIZE;
     }
 
     @Test
     public void testRequestNegativeOutOfBoundsPage() {
-        final int PAGE_NUMBER = -1;
+        final int PAGE = -1;
 
-        def http = new RESTClient( URL + "?pageNumber=" + PAGE_NUMBER );
+        def http = new RESTClient( URL + "?page=" + PAGE );
         def resp = http.get(path: "/api/user", requestContentType: JSON);
 
         assert resp.status == 200;
@@ -199,9 +204,9 @@ class UserIntegration {
 
     @Test
     public void testRequestPositiveOutOfBoundsPage() {
-        final int PAGE_NUMBER = 1000;
+        final int PAGE = 1000;
 
-        def http = new RESTClient( URL + "?pageNumber=" + PAGE_NUMBER );
+        def http = new RESTClient( URL + "?page=" + PAGE );
         def resp = http.get(path: "/api/user", requestContentType: JSON);
 
         assert resp.status == 200;
