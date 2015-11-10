@@ -1,5 +1,6 @@
 package com.meltmedia
 import groovyx.net.http.RESTClient
+import org.junit.Before
 import org.junit.Test
 /**
  * Created with IntelliJ IDEA.
@@ -10,6 +11,16 @@ class UserIntegration {
 
     private static final String JSON = "application/json"
     private static final String URL = "http://localhost:8080/api/user"
+
+    @Before
+    public void setup() {
+        def http = new RESTClient( URL )
+
+        // Creates a bunch of users
+        for (int i = 1; i <= 100; i++) {
+            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+        }
+    }
 
     /**
      * Test that we can create a good user and that we can get that user after it has been created
@@ -133,57 +144,67 @@ class UserIntegration {
     }
 
     @Test
-    public void testGetDefaultUserList() {
+    public void testGetUserList() {
+        def http = new RESTClient( URL );
+        def resp = http.get(path: "/api/user", requestContentType: JSON);
 
-        def http = new RESTClient( URL )
-
-        // Create a user so we have at least 1
-        //http.post(body: [ email:"testUser.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
-
-        // Creates a bunch of users
-        for (int i = 1; i <= 100; i++) {
-            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
-        }
-
-        def resp = http.get(path: "/api/user", requestContentType: JSON)
-
-        assert resp.status == 200
-        assert resp.data.asList.size == 25
-        assert resp.data.id.first() == 1
+        assert resp.status == 200;
+        assert resp.data.asList.size <= 25;
     }
 
     @Test
-    public void testGetSpecifiedUserList() {
-        final int NUMBER_OF_USERS = 50;
+    public void testGetBiggerUserList() {
+        final int NUMBER_OF_USERS = 200;
 
-        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS )
+        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS );
+        def resp = http.get(path: "/api/user", requestContentType: JSON);
 
-        // Creates a bunch of users
-        for (int i = 1; i <= 100; i++) {
-            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
-        }
-
-        def resp = http.get(path: "/api/user", requestContentType: JSON)
-
-        assert resp.status == 200
-        assert resp.data.asList.size == NUMBER_OF_USERS
+        assert resp.status == 200;
+        assert resp.data.asList.size <= NUMBER_OF_USERS;
     }
 
     @Test
-    public void testGetOtherPageUserList() {
+    public void testGetNegativeUserList() {
+        final int NUMBER_OF_USERS = -1;
+
+        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS );
+        def resp = http.get(path: "/api/user", requestContentType: JSON);
+
+        assert resp.status == 200;
+        assert resp.data.asList.size == 0;
+    }
+
+    @Test
+    public void testRequestValidPage() {
         final int PAGE_NUMBER = 2;
         final int NUMBER_OF_USERS = 50;
 
-        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS + "&pageNumber=" + PAGE_NUMBER )
+        def http = new RESTClient( URL + "?numberOfUsers=" + NUMBER_OF_USERS + "&pageNumber=" + PAGE_NUMBER );
+        def resp = http.get(path: "/api/user", requestContentType: JSON);
 
-        // Creates a bunch of users
-        for (int i = 1; i <= 100; i++) {
-            http.post(body: [ email:"testUser" + i +".list@meltdev.com", password:"vespa" ], requestContentType: JSON)
-        }
+        assert resp.status == 200;
+        assert resp.data.asList.size <= 50;
+    }
 
-        def resp = http.get(path: "/api/user", requestContentType: JSON)
+    @Test
+    public void testRequestNegativeOutOfBoundsPage() {
+        final int PAGE_NUMBER = -1;
 
-        assert resp.status == 200
-        assert resp.data.id.first() == NUMBER_OF_USERS + 1;
+        def http = new RESTClient( URL + "?pageNumber=" + PAGE_NUMBER );
+        def resp = http.get(path: "/api/user", requestContentType: JSON);
+
+        assert resp.status == 200;
+        assert resp.data.asList.size == 0;
+    }
+
+    @Test
+    public void testRequestPositiveOutOfBoundsPage() {
+        final int PAGE_NUMBER = 1000;
+
+        def http = new RESTClient( URL + "?pageNumber=" + PAGE_NUMBER );
+        def resp = http.get(path: "/api/user", requestContentType: JSON);
+
+        assert resp.status == 200;
+        assert resp.data.asList.size == 0;
     }
 }

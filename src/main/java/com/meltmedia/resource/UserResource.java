@@ -49,26 +49,28 @@ public class UserResource {
 
   @GET
   @Produces("application/json")
-  public List<UserRepresentation> getUsers(@DefaultValue("25") @QueryParam("numberOfUsers") int numberOfUsers, @DefaultValue("1") @QueryParam("pageNumber") int pageNumber) {
+  public List<UserRepresentation> getUsers(@DefaultValue("25") @QueryParam("pageSize") int pageSize, @DefaultValue("1") @QueryParam("page") int page) {
     List<User> users = dao.list();
 
     List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
 
-    // Determine the last page to clamp the page number
-    int lastPage = (int) Math.ceil((double) users.size() / (double) numberOfUsers);
-
-    // Clamps the page number to the first and last pages
-    if(pageNumber < 1) {
-      pageNumber = 1;
-    } else if(pageNumber > lastPage) {
-      pageNumber = lastPage;
+    if(pageSize < 0) {
+      return userReps;
     }
 
-    // The first and last indices of the user list for the selected range of users
-    int startingUserIndex = (pageNumber - 1) * numberOfUsers;
-    int lastUserIndex = Math.min(users.size(), pageNumber * numberOfUsers);
+    // Determines the last page based on the number of users requested
+    // If the requested page number is out of bounds, return an empty list
+    int lastPage = (int) Math.ceil((double) users.size() / (double) pageSize);
+    if(page < 1 || page > lastPage) {
+      return userReps;
+    }
 
-    for (int i = startingUserIndex; i < lastUserIndex; i++) {
+    // The starting and ending indices of the user list for the selected range of users
+    int startUserIndex = (page - 1) * pageSize;
+    // Math.min is used in case the user list is smaller than the number of users per page
+    int endUserIndex = Math.min(users.size(), page * pageSize);
+
+    for (int i = startUserIndex; i < endUserIndex; i++) {
       userReps.add(createRepresentation(users.get(i)));
     }
 
