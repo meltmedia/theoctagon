@@ -49,13 +49,29 @@ public class UserResource {
 
   @GET
   @Produces("application/json")
-  public List<UserRepresentation> getUsers() {
+  public List<UserRepresentation> getUsers(@DefaultValue("25") @QueryParam("pageSize") int pageSize, @DefaultValue("1") @QueryParam("page") int page) {
     List<User> users = dao.list();
 
     List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
 
-    for (User user : users) {
-      userReps.add( createRepresentation( user ) );
+    if(pageSize < 0) {
+      return userReps;
+    }
+
+    // Determines the last page based on the number of users requested
+    // If the requested page number is out of bounds, return an empty list
+    int lastPage = (int) Math.ceil((double) users.size() / (double) pageSize);
+    if(page < 1 || page > lastPage) {
+      return userReps;
+    }
+
+    // The starting and ending indices of the user list for the selected range of users
+    int startUserIndex = (page - 1) * pageSize;
+    // Math.min is used in case the user list is smaller than the number of users per page
+    int endUserIndex = Math.min(users.size(), page * pageSize);
+
+    for (int i = startUserIndex; i < endUserIndex; i++) {
+      userReps.add(createRepresentation(users.get(i)));
     }
 
     return userReps;
