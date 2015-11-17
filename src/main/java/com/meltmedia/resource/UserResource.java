@@ -47,7 +47,7 @@ public class UserResource {
   @Inject ValidationService validationService;
   @Inject UserDAO dao;
 
-  @GET
+  /*@GET
   @Produces("application/json")
   public List<UserRepresentation> getUsers() {
     List<User> users = dao.list();
@@ -59,7 +59,7 @@ public class UserResource {
     }
 
     return userReps;
-  }
+  }*/
 
   @GET
   @Path("/{userId}")
@@ -73,6 +73,49 @@ public class UserResource {
 
     return createRepresentation( user );
   }
+
+
+  @GET
+  @Produces("application/json")
+  public List<UserRepresentation> getUsers(@QueryParam("start") long start,
+                      @QueryParam("size") long size,
+                      @QueryParam("pageSize") long pageSize,
+                      @QueryParam("pageNumber") long pageNumebr) {
+    
+    List<User> users = dao.list();
+    System.out.println("start : " + start + "size :" + size);
+    final int len = (int) (start + size);
+    System.out.println("pageSize : " + pageSize);
+    if (pageSize == 0 )
+      pageSize = 4; // default pageSize
+    if(pageNumebr == 0) {
+      pageNumebr = 1; //  default pageNumber
+    }
+// range
+    start = Math.min(1, start);
+    if ((start > 0)) {
+      users = users.subList((int) start - 1,
+          Math.min((len - 1), users.size()));
+
+    } else if (pageSize > 0) {          // no of users per page
+      int startindex = (int) (((pageNumebr - 1) * pageSize));
+      int endIndex = (int) (pageNumebr * pageSize);
+      System.out.println("start : " + startindex + "end :" + endIndex);
+      if (endIndex > users.size())
+        users = users.subList(startindex, users.size());
+      else
+        users = users.subList(startindex, endIndex);
+    }
+    // users = dao.list();
+    List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
+
+    for (User user : users) {
+      userReps.add(createRepresentation(user));
+    }
+
+    return userReps;
+  }
+
 
   @POST
   @Consumes("application/json")
