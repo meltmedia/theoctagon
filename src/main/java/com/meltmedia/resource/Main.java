@@ -4,6 +4,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Path;
 
+import org.apache.commons.logging.Log;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
