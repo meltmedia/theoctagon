@@ -69,7 +69,7 @@ public class UserResource {
       for (User user : users) {
         if (currentUser >= firstUser) {
           userReps.add(createRepresentation(user));
-          if (currentUser >= lastUser) {
+          if (currentUser >= lastUser || currentUser >= userTotal) {
             break;
           }
         }

@@ -18,7 +18,7 @@ public class Main {
   @Produces("text/html")
   public String getMessage() {
     Subject currentUser = SecurityUtils.getSubject();
-    
+
     if (!currentUser.isAuthenticated()) {
       return "who are you?";
     } else {    
