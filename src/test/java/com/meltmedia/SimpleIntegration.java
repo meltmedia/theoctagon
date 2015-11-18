@@ -33,7 +33,7 @@ import org.apache.http.client.methods.HttpGet;
  * <pre>
  * mvn integration-test
  * </pre>
- * 
+ *
  * and maven will do everything for you (start jetty, run test, stop jetty).
  * <p>
  * Make sure the literal URL below matches that defined in pom.xml
@@ -70,27 +70,11 @@ public class SimpleIntegration {
         try {
             HttpResponse response = client.execute(new HttpGet(URL));
             assertEquals(200, response.getStatusLine().getStatusCode());
-            
+
             BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
             assertEquals("who are you?", rd.readLine());
         } catch (Exception e) {
             fail(ERR_MSG + e);
         }
     }
-    
-    /**
-     * Test method for {@link com.meltmedia.resource.Main#getMessage()}.
-     */
-    @Test
-    public void testGetMessageAuth() {
-        try {
-            HttpResponse response = client.execute(new HttpGet(URL));
-            assertEquals(200, response.getStatusLine().getStatusCode());
-            
-            BufferedReader rd = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
-            assertEquals("who are you?", rd.readLine());
-        } catch (Exception e) {
-            fail(ERR_MSG + e);
-        }
-    }    
 }

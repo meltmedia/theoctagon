@@ -49,15 +49,38 @@ public class UserResource {
 
   @GET
   @Produces("application/json")
-  public List<UserRepresentation> getUsers() {
+  public List<UserRepresentation> getUsers(
+          @DefaultValue("50") @QueryParam("userTotal") int userTotal, // Default parameter for userTotal
+          @DefaultValue("10") @QueryParam("pageSize") int pageSize, // Default parameter for pageSize
+          @DefaultValue("1") @QueryParam("pageNumber") int pageNumber // Default parameter for pageNumber
+          ) {
     List<User> users = dao.list();
 
     List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
 
-    for (User user : users) {
-      userReps.add( createRepresentation( user ) );
-    }
+    int firstUser;
+    int lastUser;
+    int totalPages = (int) Math.ceil(userTotal / pageSize; // Finds the amount of pages needed
+    if (userTotal != pageSize && pageSize > userTotal / 2) // Adding 1 page to the totalPages if the pageSize is more than half the total amount of users
+      totalPages++;
 
+    // Find the number of the first and last user to be displayed
+    if (pageNumber >= 0 && pageNumber <= totalPages) {
+      lastUser = pageNumber * pageSize;
+      firstUser = lastUser - (pageSize - 1);
+      // Iterate through the users and add which ones you want to display based on firstUser and lastUser
+      int currentUser = 1;
+      for (User user : users) {
+        if (currentUser >= firstUser) {
+          userReps.add(createRepresentation(user));
+          // If you have reached the finalUser or the userTotal, break the loop
+          if (currentUser >= lastUser || currentUser >= userTotal) {
+            break;
+          }
+        }
+        currentUser++;
+      }
+    }
     return userReps;
   }
 
