@@ -35,6 +35,7 @@ public class BoilerServletConfig extends GuiceServletContextListener {
     servletContext = servletContextEvent.getServletContext();
     super.contextInitialized(servletContextEvent);
 
+    // Creates 50 users
     for (int i = 1; i <=50; i++) {
       // Create a default user
       User user = new User();
@@ -50,19 +51,6 @@ public class BoilerServletConfig extends GuiceServletContextListener {
 
       log.info("Created user");
     }
-//    // Create a default user
-//    User user = new User();
-//    user.setEmail("lonestarr");
-//    UserUtil.setupNewPassword(user, "vespa".toCharArray());
-//
-//    Injector injector = (Injector)servletContext.getAttribute(Injector.class.getName());
-//    UnitOfWork unitOfWork = injector.getInstance(UnitOfWork.class);
-//    unitOfWork.begin();
-//    UserDAO userDAO = injector.getInstance(UserDAO.class);
-//    userDAO.create(user);
-//    unitOfWork.end();
-//
-//    log.info("Created user");
   }
   
   @Override

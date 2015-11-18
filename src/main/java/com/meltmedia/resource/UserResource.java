@@ -51,32 +51,31 @@ public class UserResource {
   @Produces("application/json")
   public List<UserRepresentation> getUsers(
           @DefaultValue("50") @QueryParam("userTotal") int userTotal,
-          @DefaultValue("1") @QueryParam("pageNumber") int pageNumber,
-          @DefaultValue("10") @QueryParam("pageSize") int pageSize ) {
+          @DefaultValue("10") @QueryParam("pageSize") int pageSize,
+          @DefaultValue("1") @QueryParam("pageNumber") int pageNumber) {
     List<User> users = dao.list();
 
     List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
-
+    int firstUser;
+    int lastUser;
     int totalPages = (int) Math.ceil(userTotal / pageSize);
+    if (userTotal != pageSize && pageSize > userTotal / 2)
+      totalPages++;
 
-    int firstUser = 0;
-
-    if (pageNumber >= 0 && pageNumber < totalPages) {
-      firstUser = pageNumber * pageSize;
-    }
-//    int count = Math.min(pageSize,totalUsers - firstPage);
-    int currentUser = 1;
-    int endPage = firstUser + pageSize;
-    for (User user : users) {
-      if (currentUser >= firstUser) {
-        userReps.add(createRepresentation(user));
-        if (currentUser >= endPage) {
-          break;
+    if (pageNumber >= 0 && pageNumber <= totalPages) {
+      lastUser = pageNumber * pageSize;
+      firstUser = lastUser - (pageSize - 1);
+      int currentUser = 1;
+      for (User user : users) {
+        if (currentUser >= firstUser) {
+          userReps.add(createRepresentation(user));
+          if (currentUser >= lastUser) {
+            break;
+          }
         }
+        currentUser++;
       }
-      currentUser++;
     }
-
     return userReps;
   }
 
