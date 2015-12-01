@@ -134,7 +134,7 @@ class UserIntegration {
 
     }
 
-    @Test
+     @Test
     public void testListUser() {
 
         def http = new RESTClient( URL )
@@ -142,11 +142,47 @@ class UserIntegration {
         // Create a user so we have at least 1
         http.post(body: [ email:"testUser.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
 
-        def resp = http.get(path: "/api/user", requestContentType: JSON)
+        def myQuery = [ page: "0", limit: "25" ]
+
+        def resp = http.get(path: "/api/user", requestContentType: JSON, query : myQuery)
 
         assert resp.status == 200
         assert resp.data.asList.size > 0
-
     }
 
+    @Test
+    public void testListUserNegativePageNumber(){
+        
+        def http = new RESTClient( URL )
+
+        // Create a user so we have at least 1
+        http.post(body: [ email:"testUser2.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+
+        def myQuery = [ page: "-5", limit: "-25" ]
+
+        def resp = http.get(path: "/api/user", requestContentType: JSON, query : myQuery)
+
+        assert resp.status == 200
+        assert resp.data.asList.size > 0
+    }
+
+    @Test
+    public void testListUserPageOutOfBounds(){
+        
+        def http = new RESTClient( URL )
+
+        //make 55 test users
+        for(int i = 0; i < 55;i++)
+        {
+           def email = i + "testUser@meltdev.com";
+           http.post(body: [ email:email, password:"vespa" ], requestContentType: JSON)
+        }
+
+        def myQuery = [ page: "999", limit: "15" ]
+
+        def resp = http.get(path: "/api/user", requestContentType: JSON, query : myQuery)
+
+        assert resp.status == 200
+        assert resp.data.asList.size > 0
+    }
 }
