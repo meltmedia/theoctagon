@@ -35,6 +35,9 @@ public class UserResource {
 
   private Logger log = LoggerFactory.getLogger( getClass() );
 
+  private static final String DEFAULT_PAGE = "0";
+  private static final String DEFAULT_LIMIT = "25";
+
   protected UserRepresentation createRepresentation(User user) {
 
     UserRepresentation rep = new UserRepresentation(user);
@@ -50,8 +53,12 @@ public class UserResource {
   @GET
   @Produces("application/json")
   public List<UserRepresentation> getUsers(
-    @DefaultValue("1") @QueryParam("page") int page,
-    @DefaultValue("25") @QueryParam("limit") int limit) {    
+    @DefaultValue(DEFAULT_PAGE) @QueryParam("page") int page,
+    @DefaultValue(DEFAULT_LIMIT) @QueryParam("limit") int limit) {    
+    
+    if (page < 0) page = Integer.parseInt(DEFAULT_PAGE);
+    if (limit < 0) limit = Integer.parseInt(DEFAULT_LIMIT);
+
     List<User> users = dao.list(page,limit);
 
 
