@@ -93,10 +93,25 @@ public abstract class AbstractDAO<E extends IEntity> implements IDAO<E> {
     criteria.select( listRoot );
     criteria.orderBy(builder.asc(listRoot.get("createdDate")));
     
-    List<E> entities = provider.get().createQuery(criteria).setFirstResult(limit*page).setMaxResults(limit).getResultList();
+    List<E> fullUserList = provider.get().createQuery(criteria).getResultList();
+    int firstResult = page * limit;
     
-    return entities;
-  }
+    if(firstResult >= fullUserList.size())
+    {
+      int lastPageNumber = (int) (fullUserList.size() / limit);
+     
+      firstResult = lastPageNumber * limit;
+       System.out.println("Users:" + fullUserList.size() + " , limit:" + limit 
+        + " , lastPageNumber:" + lastPageNumber + ", firstResult:" + firstResult);
 
-  
+      System.out.println("You tried a page with limits well past our user count, I fixed it for you");
+    }
+
+    //somehow if you ended up with a first result of 0, fix it
+    firstResult = Math.min(firstResult,0);
+    
+    List<E> entities = provider.get().createQuery(criteria).setFirstResult(firstResult).setMaxResults(limit).getResultList();
+
+    return entities;
+  }  
 }
