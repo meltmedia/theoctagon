@@ -49,8 +49,11 @@ public class UserResource {
 
   @GET
   @Produces("application/json")
-  public List<UserRepresentation> getUsers() {
-    List<User> users = dao.list();
+  public List<UserRepresentation> getUsers(
+    @DefaultValue("1") @QueryParam("page") int page,
+    @DefaultValue("25") @QueryParam("limit") int limit) {    
+    List<User> users = dao.list(page,limit);
+
 
     List<UserRepresentation> userReps = new ArrayList<UserRepresentation>();
 

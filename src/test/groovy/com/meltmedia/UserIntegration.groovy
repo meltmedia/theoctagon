@@ -142,11 +142,12 @@ class UserIntegration {
         // Create a user so we have at least 1
         http.post(body: [ email:"testUser.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
 
-        def resp = http.get(path: "/api/user", requestContentType: JSON)
+        def myQuery = [ page: "0", limit: "25" ]
+
+        def resp = http.get(path: "/api/user", requestContentType: JSON, query : myQuery)
 
         assert resp.status == 200
         assert resp.data.asList.size > 0
-
     }
 
 }
