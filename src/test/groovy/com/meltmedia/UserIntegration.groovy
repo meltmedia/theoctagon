@@ -2,8 +2,6 @@ package com.meltmedia
 
 import groovyx.net.http.RESTClient
 import org.junit.Test
-import org.junit.BeforeClass
-
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,27 +12,6 @@ class UserIntegration {
 
     private static final String JSON = "application/json"
     private static final String URL = "http://localhost:8080/api/user"
-
-
-    @BeforeClass
-    public static void testCreateUserBatch() {
-
-        def http = new RESTClient( URL )
-
-        for(int i = 0; i < 55;i++)
-        {
-           def email = i + "testUser@meltdev.com";
-           def resp = http.post(body: [ email:email, password:"vespa" ], requestContentType: JSON)
-        }
-       
-        def resp = http.get(path: "/api/user", requestContentType: JSON, query: ["limit": 25, "page": 0])
-
-        assert resp.status == 200
-        assert resp.data.asList.size == 25
-
-        println "I made some users"
-    }
-
 
     /**
      * Test that we can create a good user and that we can get that user after it has been created
@@ -174,19 +151,16 @@ class UserIntegration {
     }
 
     @Test
-    public void testListUserNegativePage(){
-        println "Test Start"
-
+    public void testListUserNegativePageNumber(){
+        
         def http = new RESTClient( URL )
 
         // Create a user so we have at least 1
         http.post(body: [ email:"testUser2.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
 
-        def myQuery = [ page: "-5", limit: "25" ]
+        def myQuery = [ page: "-5", limit: "-25" ]
 
         def resp = http.get(path: "/api/user", requestContentType: JSON, query : myQuery)
-
-        println "Negative list size: $resp.data.asList.size"
 
         assert resp.status == 200
         assert resp.data.asList.size > 0
@@ -194,19 +168,19 @@ class UserIntegration {
 
     @Test
     public void testListUserPageOutOfBounds(){
-        println "Test Start"
-
+        
         def http = new RESTClient( URL )
 
-        // Create a user so we have at least 1
-        http.post(body: [ email:"testUser3.list@meltdev.com", password:"vespa" ], requestContentType: JSON)
+        //make 55 test users
+        for(int i = 0; i < 55;i++)
+        {
+           def email = i + "testUser@meltdev.com";
+           http.post(body: [ email:email, password:"vespa" ], requestContentType: JSON)
+        }
 
-        def myQuery = [ page: "999", limit: "25" ]
+        def myQuery = [ page: "999", limit: "15" ]
 
         def resp = http.get(path: "/api/user", requestContentType: JSON, query : myQuery)
-
-        println "Out of bounds final page size: $resp.data.asList.size"
-        println "Out of bounds first id? page size: $resp.data.asList[0].email"
 
         assert resp.status == 200
         assert resp.data.asList.size > 0
